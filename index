@@ -1,0 +1,1770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Irys Knowledge Quiz</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #14b8a6 0%, #0d9488 100%);
+            min-height: 100vh;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .bg-pattern {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0.1;
+            background: 
+                radial-gradient(circle at 25% 25%, #fff 2px, transparent 2px),
+                radial-gradient(circle at 75% 75%, #fff 1px, transparent 1px);
+            background-size: 50px 50px;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1;
+        }
+
+        .quiz-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 24px;
+            padding: 40px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            transition: all 0.3s ease;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .logo {
+            background: linear-gradient(135deg, #14b8a6, #0d9488);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: -2px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.2rem;
+            font-weight: 300;
+        }
+
+        .progress-container {
+            margin-bottom: 30px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-bottom: 10px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #14b8a6, #0d9488);
+            border-radius: 10px;
+            transition: width 0.5s ease;
+            position: relative;
+            width: 0%;
+        }
+
+        .progress-fill::after {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+
+        .progress-text {
+            text-align: center;
+            color: #666;
+            font-weight: 500;
+        }
+
+        .question-container {
+            margin-bottom: 30px;
+        }
+
+        .question {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 25px;
+            line-height: 1.4;
+        }
+
+        .options {
+            display: grid;
+            gap: 15px;
+        }
+
+        .option {
+            padding: 18px 24px;
+            background: #f8f9ff;
+            border: 2px solid #e0e6ff;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .option::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(20, 184, 166, 0.1), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .option:hover:not(.selected):not(.correct):not(.incorrect) {
+            background: linear-gradient(135deg, #14b8a6, #0d9488);
+            color: white;
+            border-color: #14b8a6;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(20, 184, 166, 0.3);
+        }
+
+        .option:hover::before {
+            left: 100%;
+        }
+
+        .option.selected {
+            background: linear-gradient(135deg, #14b8a6, #0d9488);
+            color: white;
+            border-color: #14b8a6;
+        }
+
+        .option.correct {
+            background: linear-gradient(135deg, #4ade80, #22c55e) !important;
+            border-color: #22c55e !important;
+            color: white !important;
+        }
+
+        .option.incorrect {
+            background: linear-gradient(135deg, #f87171, #ef4444) !important;
+            border-color: #ef4444 !important;
+            color: white !important;
+        }
+
+        .button {
+            background: linear-gradient(135deg, #14b8a6, #0d9488);
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .button:hover:not(:disabled) {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 35px rgba(20, 184, 166, 0.4);
+        }
+
+        .button:hover::before {
+            left: 100%;
+        }
+
+        .button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
+        }
+
+        .button-container {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .result-container {
+            text-align: center;
+            display: none;
+        }
+
+        .score-circle {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #14b8a6, #0d9488);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 30px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .score-circle::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.1), transparent);
+            animation: rotate 4s linear infinite;
+        }
+
+        @keyframes rotate {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .score-text {
+            color: white;
+            font-size: 3rem;
+            font-weight: 900;
+            z-index: 1;
+        }
+
+        .result-message {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 30px;
+            color: #333;
+        }
+
+        .share-container {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+
+        .share-button {
+            background: #1DA1F2;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 12px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .share-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(29, 161, 242, 0.3);
+        }
+
+        .download-button {
+            background: #10B981 !important;
+        }
+
+        .download-button:hover {
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3) !important;
+        }
+
+        .start-screen {
+            text-align: center;
+        }
+
+        .start-description {
+            font-size: 1.1rem;
+            color: #666;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .timer {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            padding: 12px 20px;
+            background: rgba(20, 184, 166, 0.1);
+            border-radius: 16px;
+            border: 2px solid rgba(20, 184, 166, 0.2);
+        }
+
+        .timer-icon {
+            font-size: 1.2rem;
+        }
+
+        .timer-text {
+            font-weight: 600;
+            color: #14b8a6;
+            font-size: 1.1rem;
+        }
+
+        .timer.warning {
+            background: rgba(239, 68, 68, 0.1);
+            border-color: rgba(239, 68, 68, 0.3);
+            animation: pulse 1s infinite;
+        }
+
+        .timer.warning .timer-text {
+            color: #ef4444;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 20px;
+            margin: 30px 0;
+        }
+
+        .stat-item {
+            background: rgba(20, 184, 166, 0.1);
+            padding: 20px;
+            border-radius: 16px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #14b8a6;
+            display: block;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                padding: 15px;
+            }
+            
+            .quiz-card {
+                padding: 25px;
+                border-radius: 20px;
+            }
+            
+            .logo {
+                font-size: 2.5rem;
+            }
+            
+            .question {
+                font-size: 1.1rem;
+            }
+            
+            .share-container {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .learn-topics {
+                grid-template-columns: 1fr;
+            }
+            
+            .topic-card {
+                padding: 20px;
+            }
+        }
+
+        /* Learning Menu Styles */
+        .learn-topics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .topic-card {
+            background: rgba(20, 184, 166, 0.05);
+            border: 2px solid rgba(20, 184, 166, 0.1);
+            border-radius: 16px;
+            padding: 25px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .topic-card:hover {
+            background: rgba(20, 184, 166, 0.1);
+            border-color: #14b8a6;
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(20, 184, 166, 0.2);
+        }
+
+        .topic-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            display: block;
+        }
+
+        .topic-card h3 {
+            color: #14b8a6;
+            font-size: 1.3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .topic-card p {
+            color: #666;
+            font-size: 0.95rem;
+            line-height: 1.4;
+        }
+
+        .topic-content {
+            max-width: none;
+            text-align: left;
+        }
+
+        .topic-content h2 {
+            color: #14b8a6;
+            font-size: 2rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .topic-content h3 {
+            color: #333;
+            font-size: 1.4rem;
+            margin: 25px 0 15px 0;
+            font-weight: 600;
+        }
+
+        .topic-content p {
+            color: #555;
+            line-height: 1.6;
+            margin-bottom: 15px;
+        }
+
+        .topic-content ul {
+            margin: 15px 0;
+            padding-left: 20px;
+        }
+
+        .topic-content li {
+            color: #555;
+            margin-bottom: 8px;
+            line-height: 1.5;
+        }
+
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(20, 184, 166, 0.1), rgba(13, 148, 136, 0.1));
+            border-left: 4px solid #14b8a6;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .highlight-box p {
+            margin-bottom: 0;
+            font-weight: 500;
+        }
+
+        .back-button:hover {
+            background: #14b8a6 !important;
+            color: white !important;
+        }
+
+        /* Wallet Connect Styles */
+        .wallet-section {
+            margin: 20px 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .wallet-connect-btn {
+            background: linear-gradient(135deg, #6366f1, #4f46e5);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+        }
+
+        .wallet-connect-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+        }
+
+        .wallet-icon {
+            font-size: 1.2rem;
+        }
+
+        .wallet-status {
+            background: rgba(34, 197, 94, 0.1);
+            border: 2px solid rgba(34, 197, 94, 0.2);
+            border-radius: 16px;
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+            min-width: 300px;
+        }
+
+        .wallet-info {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .wallet-address {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: #22c55e;
+            font-size: 0.9rem;
+        }
+
+        .wallet-balance {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .disconnect-btn {
+            background: #ef4444;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .disconnect-btn:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+        }
+
+        .network-status {
+            text-align: center;
+            margin: 15px 0;
+            padding: 10px;
+            background: rgba(20, 184, 166, 0.1);
+            border-radius: 8px;
+            color: #14b8a6;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .network-status.error {
+            background: rgba(239, 68, 68, 0.1);
+            color: #ef4444;
+        }
+
+        @media (max-width: 768px) {
+            .wallet-status {
+                flex-direction: column;
+                text-align: center;
+                min-width: auto;
+                width: 100%;
+            }
+            
+            .wallet-section {
+                flex-direction: column;
+                gap: 15px;
+            }
+            
+            .wallet-connect-btn {
+                width: 100%;
+                justify-content: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-pattern"></div>
+    
+    <div class="container">
+        <div class="quiz-card">
+            <div class="header">
+                <h1 class="logo">IRYS</h1>
+                <p class="subtitle">Knowledge Quiz</p>
+                
+                <!-- Wallet Connect Section -->
+                <div class="wallet-section">
+                    <div id="wallet-disconnect" class="wallet-status connected" style="display: none;">
+                        <div class="wallet-info">
+                            <div class="wallet-address" id="wallet-address">0x1234...5678</div>
+                            <div class="wallet-balance" id="wallet-balance">0.00 IRYS</div>
+                        </div>
+                        <button class="disconnect-btn" onclick="disconnectWallet()">Disconnect</button>
+                    </div>
+                    
+                    <button id="wallet-connect" class="wallet-connect-btn" onclick="connectWallet()">
+                        <span class="wallet-icon">🔗</span>
+                        Connect to Irys Testnet
+                    </button>
+                </div>
+            </div>
+
+            <!-- Start Screen -->
+            <div id="start-screen" class="start-screen">
+                <p class="start-description">
+                    Test your knowledge about Irys - the first programmable datachain that integrates storage and execution natively. 
+                    You'll face 15 randomly selected questions covering all aspects of the platform.
+                </p>
+                
+                <div class="stats">
+                    <div class="stat-item">
+                        <span class="stat-number">15</span>
+                        <div class="stat-label">Questions</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">3</span>
+                        <div class="stat-label">Minutes</div>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-number">4</span>
+                        <div class="stat-label">Options Each</div>
+                    </div>
+                </div>
+
+                <div class="button-container">
+                    <button class="button" onclick="startQuiz()">Start Quiz</button>
+                    <button class="button" onclick="showLearnMenu()" style="background: linear-gradient(135deg, #6366f1, #4f46e5); margin-left: 15px;">Learn About Irys</button>
+                </div>
+            </div>
+
+            <!-- Learn Menu Screen -->
+            <div id="learn-screen" style="display: none;">
+                <div class="learn-header">
+                    <h2 style="color: #14b8a6; font-size: 2rem; margin-bottom: 20px; text-align: center;">Learn About Irys</h2>
+                    <p style="text-align: center; color: #666; margin-bottom: 30px;">Master the concepts before taking the quiz</p>
+                </div>
+
+                <div class="learn-topics">
+                    <div class="topic-card" onclick="showTopic('what-is-irys')">
+                        <div class="topic-icon">🚀</div>
+                        <h3>What is Irys?</h3>
+                        <p>Understanding the first programmable datachain</p>
+                    </div>
+                    
+                    <div class="topic-card" onclick="showTopic('programmable-data')">
+                        <div class="topic-icon">⚡</div>
+                        <h3>Programmable Data</h3>
+                        <p>How data becomes active and valuable</p>
+                    </div>
+                    
+                    <div class="topic-card" onclick="showTopic('verifiable-compute')">
+                        <div class="topic-icon">✅</div>
+                        <h3>Verifiable Compute</h3>
+                        <p>Trustless AI and computation verification</p>
+                    </div>
+                    
+                    <div class="topic-card" onclick="showTopic('storage-pricing')">
+                        <div class="topic-icon">💰</div>
+                        <h3>Storage & Pricing</h3>
+                        <p>Predictable, hardware-anchored costs</p>
+                    </div>
+                    
+                    <div class="topic-card" onclick="showTopic('irysvm')">
+                        <div class="topic-icon">⚙️</div>
+                        <h3>IrysVM</h3>
+                        <p>EVM-compatible execution layer</p>
+                    </div>
+                    
+                    <div class="topic-card" onclick="showTopic('use-cases')">
+                        <div class="topic-icon">🔧</div>
+                        <h3>Use Cases</h3>
+                        <p>Real-world applications and benefits</p>
+                    </div>
+                </div>
+
+                <div class="button-container">
+                    <button class="button" onclick="showStartScreen()">Back to Quiz</button>
+                    <a href="https://docs.irys.xyz" target="_blank" class="button" style="background: linear-gradient(135deg, #6366f1, #4f46e5); margin-left: 15px; text-decoration: none; display: inline-block;">Visit Irys Docs</a>
+                </div>
+            </div>
+
+            <!-- Topic Detail Screen -->
+            <div id="topic-screen" style="display: none;">
+                <div class="topic-content">
+                    <button class="back-button" onclick="showLearnMenu()" style="background: none; border: 2px solid #14b8a6; color: #14b8a6; padding: 8px 16px; border-radius: 8px; margin-bottom: 20px; cursor: pointer;">← Back to Topics</button>
+                    <div id="topic-detail"></div>
+                </div>
+            </div>
+
+            <!-- Quiz Screen -->
+            <div id="quiz-screen" style="display: none;">
+                <div class="timer" id="timer">
+                    <span class="timer-icon">⏰</span>
+                    <span class="timer-text" id="timer-text">3:00</span>
+                </div>
+
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="progress-fill"></div>
+                    </div>
+                    <div class="progress-text" id="progress-text">Question 1 of 15</div>
+                </div>
+
+                <div class="question-container">
+                    <div class="question" id="question"></div>
+                    <div class="options" id="options"></div>
+                </div>
+
+                <div class="button-container">
+                    <button class="button" id="next-button" onclick="nextQuestion()" disabled>Next Question</button>
+                </div>
+            </div>
+
+            <!-- Result Screen -->
+            <div id="result-screen" class="result-container">
+                <div class="score-circle">
+                    <div class="score-text" id="score-display"></div>
+                </div>
+                
+                <div class="result-message" id="result-message"></div>
+                
+                <div class="stats" id="result-stats"></div>
+
+                <div class="share-container">
+                    <a href="#" class="share-button" id="twitter-share" target="_blank">
+                        <span>🐦</span> Share on Twitter
+                    </a>
+                    <button class="share-button download-button" onclick="downloadResult()">
+                        <span>📥</span> Download Image
+                    </button>
+                </div>
+
+                <div class="button-container" style="margin-top: 30px;">
+                    <button class="button" onclick="restartQuiz()">Take Another Quiz</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global variables
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let selectedQuestions = [];
+        let userAnswers = [];
+        let hasAnswered = false;
+        let timeLeft = 180; // 3 minutes in seconds
+        let timerInterval = null;
+        let autoAdvanceTimeout = null;
+
+        const allQuestions = [
+            {
+                question: "What is Irys?",
+                options: ["A. A decentralized messaging app", "B. The first programmable datachain", "C. A traditional database protocol", "D. A Bitcoin sidechain"],
+                correct: 1
+            },
+            {
+                question: "What core problem does Irys solve?",
+                options: ["A. Expensive compute cycles", "B. Lack of affordable, verifiable onchain storage", "C. Cross-chain token swaps", "D. Centralized governance in DAOs"],
+                correct: 1
+            },
+            {
+                question: "What does \"programmable data\" mean in Irys?",
+                options: ["A. Data can only be read but not modified", "B. Data is stored with pre-defined instructions that smart contracts can execute", "C. Data is encrypted and locked forever", "D. Data must be manually updated by developers"],
+                correct: 1
+            },
+            {
+                question: "Which layer powers execution on Irys?",
+                options: ["A. Solana VM", "B. Filecoin VM", "C. IrysVM (EVM-compatible)", "D. Bitcoin Script"],
+                correct: 2
+            },
+            {
+                question: "What is unique about Irys compared to other blockchains?",
+                options: ["A. It has the fastest token swaps", "B. It integrates storage and execution natively", "C. It has no miner incentives", "D. It uses only temporary data storage"],
+                correct: 1
+            },
+            {
+                question: "What type of blockchain is Irys?",
+                options: ["A. Execution-only", "B. Storage-only", "C. Integrated storage + execution", "D. Gaming-focused chain"],
+                correct: 2
+            },
+            {
+                question: "Which problem did early datachains fail to solve?",
+                options: ["A. Affordable storage", "B. Making stored data useful and programmable", "C. Token inflation", "D. Offchain compute"],
+                correct: 1
+            },
+            {
+                question: "Irys enables smart contracts to:",
+                options: ["A. Only read static data", "B. Read and write data natively", "C. Send emails", "D. Run only payments"],
+                correct: 1
+            },
+            {
+                question: "Which of these is NOT a benefit of Irys?",
+                options: ["A. Verifiable storage", "B. Programmable data", "C. Unpredictable costs", "D. EVM compatibility"],
+                correct: 2
+            },
+            {
+                question: "Irys positions itself as:",
+                options: ["A. The AWS of Web3", "B. A DeFi exchange", "C. A centralized data provider", "D. A cross-chain bridge"],
+                correct: 0
+            },
+            {
+                question: "On Irys, data can:",
+                options: ["A. Only sit idle once uploaded", "B. Carry enforceable instructions for contracts and AI agents", "C. Be deleted automatically after 30 days", "D. Only be retrieved through centralized APIs"],
+                correct: 1
+            },
+            {
+                question: "Which use case highlights programmable data?",
+                options: ["A. Social media posting", "B. Onchain dataset licensing with automated royalties", "C. Peer-to-peer token transfers", "D. Gasless NFT minting"],
+                correct: 1
+            },
+            {
+                question: "What enables AI agents to coordinate workflows on Irys?",
+                options: ["A. Offchain databases", "B. Programmable data", "C. Email notifications", "D. Centralized schedulers"],
+                correct: 1
+            },
+            {
+                question: "Which industries benefit most from programmable data?",
+                options: ["A. Only DeFi projects", "B. AI, IP, gaming/NFTs, and enterprises", "C. Only Bitcoin miners", "D. Only Web2 cloud providers"],
+                correct: 1
+            },
+            {
+                question: "A dataset on Irys can embed:",
+                options: ["A. Royalty rules", "B. Access permissions", "C. Automated payments", "D. All of the above"],
+                correct: 3
+            },
+            {
+                question: "What does Irys ensure for AI computations?",
+                options: ["A. That results are unverifiable", "B. That every step is proven with cryptographic proofs", "C. That jobs can only run offchain with no audit", "D. That only partial data is stored"],
+                correct: 1
+            },
+            {
+                question: "Why is verifiable compute important?",
+                options: ["A. Prevents GPU providers from overcharging for incomplete jobs", "B. Makes storage more expensive", "C. Slows down inference intentionally", "D. Allows speculative token pricing"],
+                correct: 0
+            },
+            {
+                question: "What type of proofs does Irys use for compute?",
+                options: ["A. Matrix proofs", "B. Layer-by-layer cryptographic proofs", "C. Oracle attestations", "D. Legal contracts"],
+                correct: 1
+            },
+            {
+                question: "Who benefits from verifiable compute?",
+                options: ["A. Only GPU farms", "B. AI developers, GPU providers, users, and AI agents", "C. Only smart contract lawyers", "D. None—it adds no value"],
+                correct: 1
+            },
+            {
+                question: "How does Irys handle heavy GPU tasks?",
+                options: ["A. Runs them entirely onchain at high cost", "B. Offloads them offchain with verifiable proofs", "C. Requires miners to complete them manually", "D. Doesn't allow compute jobs"],
+                correct: 1
+            },
+            {
+                question: "What prevents incomplete jobs from being paid for?",
+                options: ["A. Human audits", "B. Smart contracts checking compute proofs", "C. Miner honesty", "D. Token price fluctuations"],
+                correct: 1
+            },
+            {
+                question: "Which group can independently verify work on Irys?",
+                options: ["A. Only developers", "B. AI agents", "C. Token holders", "D. Exchanges"],
+                correct: 1
+            },
+            {
+                question: "What happens if compute proofs don't match expected epochs?",
+                options: ["A. Payment can be denied", "B. The job auto-restarts", "C. The GPU is confiscated", "D. The miner exits"],
+                correct: 0
+            },
+            {
+                question: "What does verifiability ensure for AI users?",
+                options: ["A. Transparency and auditability", "B. Faster token swaps", "C. Encrypted datasets", "D. Unlimited free storage"],
+                correct: 0
+            },
+            {
+                question: "What problem do current compute marketplaces have?",
+                options: ["A. Centralized job coordination", "B. Verified execution", "C. Low latency", "D. Integration with Irys"],
+                correct: 0
+            },
+            {
+                question: "What anchors Irys storage pricing?",
+                options: ["A. Ethereum gas prices", "B. HDD hardware costs", "C. Token speculation", "D. Bitcoin transaction fees"],
+                correct: 1
+            },
+            {
+                question: "How much cheaper is Irys compared to Arweave (approx)?",
+                options: ["A. 2×", "B. 5×", "C. 10×", "D. ~20×"],
+                correct: 3
+            },
+            {
+                question: "Which storage models does Irys support?",
+                options: ["A. Permanent only", "B. Temporary only", "C. Both permanent and term-based storage", "D. Cloud subscription only"],
+                correct: 2
+            },
+            {
+                question: "Why is predictable pricing important for developers?",
+                options: ["A. It ensures stable budgets and avoids token volatility", "B. It increases arbitrage opportunities", "C. It makes retrieval slower", "D. It prevents decentralization"],
+                correct: 0
+            },
+            {
+                question: "Which architecture allows Irys to handle massive AI datasets?",
+                options: ["A. Single ledger", "B. Multi-ledger", "C. DAG-only structure", "D. Sidechain anchors"],
+                correct: 1
+            },
+            {
+                question: "Which storage system avoids bottlenecks in Irys?",
+                options: ["A. Partition-based multi-ledger design", "B. Token auctions", "C. Oracles", "D. Cloud gateways"],
+                correct: 0
+            },
+            {
+                question: "Which industries need stable dataset costs most?",
+                options: ["A. AI startups and enterprises", "B. Bitcoin miners", "C. Gaming consoles", "D. Retail banks"],
+                correct: 0
+            },
+            {
+                question: "What is a key difference from Filecoin?",
+                options: ["A. Irys supports permanent storage; Filecoin is term-limited", "B. Both only do term storage", "C. Irys requires auction markets", "D. Filecoin has faster retrieval"],
+                correct: 0
+            },
+            {
+                question: "What makes Arweave pricing unstable?",
+                options: ["A. Anchored to HDDs", "B. Pegged to volatile AR token", "C. Fixed USD price", "D. Miner subsidies"],
+                correct: 1
+            },
+            {
+                question: "Irys storage pricing is best described as:",
+                options: ["A. True at-cost", "B. Auction-based", "C. Token speculation", "D. Variable daily"],
+                correct: 0
+            },
+            {
+                question: "What is IrysVM?",
+                options: ["A. A non-programmable ledger", "B. A modified Ethereum Virtual Machine designed for data-heavy apps", "C. A Bitcoin consensus script", "D. A Solana runtime copy"],
+                correct: 1
+            },
+            {
+                question: "Why does EVM compatibility matter?",
+                options: ["A. It lets Ethereum developers use familiar tools", "B. It makes mining more profitable", "C. It removes smart contract execution entirely", "D. It forces new programming languages"],
+                correct: 0
+            },
+            {
+                question: "What is unique about IrysVM vs Ethereum's EVM?",
+                options: ["A. It can directly read and write stored data", "B. It can't run Solidity contracts", "C. It has no smart contract support", "D. It is slower than EVM"],
+                correct: 0
+            },
+            {
+                question: "Which group benefits from EVM compatibility?",
+                options: ["A. Only Bitcoin miners", "B. AI startups and agents", "C. Only NFT artists", "D. Centralized exchanges"],
+                correct: 1
+            },
+            {
+                question: "What new capability does IrysVM unlock?",
+                options: ["A. Smart contracts can act directly on data", "B. Faster token price speculation", "C. Cheaper token swaps", "D. Mining centralization"],
+                correct: 0
+            },
+            {
+                question: "Which apps can connect to Irys easily?",
+                options: ["A. Ethereum-compatible apps", "B. Bitcoin Lightning apps", "C. Solana dApps only", "D. Cosmos SDK apps"],
+                correct: 0
+            }
+        ];
+
+        function shuffleArray(array) {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+            }
+            return shuffled;
+        }
+
+        function startQuiz() {
+            // Reset all quiz state
+            clearInterval(timerInterval);
+            clearTimeout(autoAdvanceTimeout);
+            timeLeft = 180;
+            currentQuestionIndex = 0;
+            score = 0;
+            userAnswers = [];
+            hasAnswered = false;
+
+            // Select and shuffle questions
+            selectedQuestions = shuffleArray(allQuestions).slice(0, 15);
+
+            // Show quiz screen
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('quiz-screen').style.display = 'block';
+            document.getElementById('result-screen').style.display = 'none';
+
+            // Start timer and show first question
+            startTimer();
+            showQuestion();
+        }
+
+        function startTimer() {
+            updateTimerDisplay();
+            timerInterval = setInterval(() => {
+                timeLeft--;
+                updateTimerDisplay();
+                
+                if (timeLeft <= 0) {
+                    clearInterval(timerInterval);
+                    showResults();
+                }
+            }, 1000);
+        }
+
+        function updateTimerDisplay() {
+            const minutes = Math.floor(timeLeft / 60);
+            const seconds = timeLeft % 60;
+            const formattedTime = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            document.getElementById('timer-text').textContent = formattedTime;
+            
+            // Add warning style when less than 30 seconds
+            const timerElement = document.getElementById('timer');
+            if (timeLeft <= 30) {
+                timerElement.classList.add('warning');
+            } else {
+                timerElement.classList.remove('warning');
+            }
+        }
+
+        function showQuestion() {
+            if (currentQuestionIndex >= selectedQuestions.length) {
+                showResults();
+                return;
+            }
+
+            const question = selectedQuestions[currentQuestionIndex];
+            document.getElementById('question').textContent = question.question;
+            
+            const optionsContainer = document.getElementById('options');
+            optionsContainer.innerHTML = '';
+            
+            question.options.forEach((option, index) => {
+                const optionElement = document.createElement('div');
+                optionElement.className = 'option';
+                optionElement.textContent = option;
+                optionElement.onclick = () => selectOption(index);
+                optionsContainer.appendChild(optionElement);
+            });
+
+            updateProgress();
+            hasAnswered = false;
+            document.getElementById('next-button').disabled = true;
+            
+            // Clear any existing auto-advance timeout
+            clearTimeout(autoAdvanceTimeout);
+        }
+
+        function selectOption(selectedIndex) {
+            if (hasAnswered) return;
+
+            const options = document.querySelectorAll('.option');
+            const question = selectedQuestions[currentQuestionIndex];
+            
+            // Clear any pending auto-advance
+            clearTimeout(autoAdvanceTimeout);
+            
+            options.forEach((option, index) => {
+                option.style.pointerEvents = 'none'; // Disable all options
+                
+                if (index === selectedIndex) {
+                    option.classList.add('selected');
+                    if (index === question.correct) {
+                        option.classList.add('correct');
+                        score++;
+                    } else {
+                        option.classList.add('incorrect');
+                    }
+                } else if (index === question.correct) {
+                    option.classList.add('correct');
+                }
+            });
+
+            userAnswers.push(selectedIndex);
+            hasAnswered = true;
+            document.getElementById('next-button').disabled = false;
+
+            // Auto-advance after 2 seconds
+            autoAdvanceTimeout = setTimeout(() => {
+                if (hasAnswered) {
+                    nextQuestion();
+                }
+            }, 2000);
+        }
+
+        function nextQuestion() {
+            clearTimeout(autoAdvanceTimeout);
+            currentQuestionIndex++;
+            
+            if (currentQuestionIndex < selectedQuestions.length) {
+                showQuestion();
+            } else {
+                showResults();
+            }
+        }
+
+        function updateProgress() {
+            const progress = ((currentQuestionIndex + 1) / selectedQuestions.length) * 100;
+            document.getElementById('progress-fill').style.width = progress + '%';
+            document.getElementById('progress-text').textContent = `Question ${currentQuestionIndex + 1} of ${selectedQuestions.length}`;
+        }
+
+        function showResults() {
+            clearInterval(timerInterval);
+            clearTimeout(autoAdvanceTimeout);
+            
+            document.getElementById('quiz-screen').style.display = 'none';
+            document.getElementById('result-screen').style.display = 'block';
+            
+            const percentage = Math.round((score / selectedQuestions.length) * 100);
+            document.getElementById('score-display').textContent = `${percentage}%`;
+            
+            let message = '';
+            if (percentage >= 90) {
+                message = '🎉 Outstanding! You\'re an Irys expert!';
+            } else if (percentage >= 75) {
+                message = '🌟 Great job! You have solid Irys knowledge!';
+            } else if (percentage >= 60) {
+                message = '👍 Good work! Keep learning about Irys!';
+            } else {
+                message = '📚 Keep studying! Irys has lots to offer!';
+            }
+            
+            document.getElementById('result-message').textContent = message;
+            
+            const timeUsed = 180 - timeLeft;
+            const minutes = Math.floor(timeUsed / 60);
+            const seconds = timeUsed % 60;
+            const timeDisplay = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+            
+            document.getElementById('result-stats').innerHTML = `
+                <div class="stat-item">
+                    <span class="stat-number">${score}</span>
+                    <div class="stat-label">Correct Answers</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">${selectedQuestions.length - score}</span>
+                    <div class="stat-label">Incorrect Answers</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">${percentage}%</span>
+                    <div class="stat-label">Success Rate</div>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">${timeDisplay}</span>
+                    <div class="stat-label">Time Used</div>
+                </div>
+            `;
+
+            // Update Twitter share link
+            const twitterText = `I just scored ${percentage}% on the Irys Knowledge Quiz in ${timeDisplay}! 🚀 Test your understanding of the first programmable datachain at`;
+            document.getElementById('twitter-share').href = `https://twitter.com/intent/tweet?text=${encodeURIComponent(twitterText)}`;
+        }
+
+        function downloadResult() {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = 800;
+            canvas.height = 600;
+
+            // Background gradient
+            const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+            gradient.addColorStop(0, '#14b8a6');
+            gradient.addColorStop(1, '#0d9488');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Add pattern
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+            for (let i = 0; i < canvas.width; i += 50) {
+                for (let j = 0; j < canvas.height; j += 50) {
+                    ctx.beginPath();
+                    ctx.arc(i + 25, j + 25, 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // Create rounded rectangle function
+            CanvasRenderingContext2D.prototype.roundRect = function(x, y, w, h, r) {
+                this.beginPath();
+                this.moveTo(x + r, y);
+                this.lineTo(x + w - r, y);
+                this.quadraticCurveTo(x + w, y, x + w, y + r);
+                this.lineTo(x + w, y + h - r);
+                this.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                this.lineTo(x + r, y + h);
+                this.quadraticCurveTo(x, y + h, x, y + h - r);
+                this.lineTo(x, y + r);
+                this.quadraticCurveTo(x, y, x + r, y);
+                this.closePath();
+                return this;
+            };
+
+            // Main card background
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.roundRect(50, 50, canvas.width - 100, canvas.height - 100, 24).fill();
+
+            // Title
+            ctx.fillStyle = '#14b8a6';
+            ctx.font = 'bold 48px Arial, sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText('IRYS', canvas.width / 2, 130);
+            
+            ctx.fillStyle = '#666';
+            ctx.font = '24px Arial, sans-serif';
+            ctx.fillText('Knowledge Quiz Results', canvas.width / 2, 170);
+
+            // Score circle
+            const centerX = canvas.width / 2;
+            const centerY = 300;
+            const radius = 80;
+            
+            const scoreGradient = ctx.createLinearGradient(centerX - radius, centerY - radius, centerX + radius, centerY + radius);
+            scoreGradient.addColorStop(0, '#14b8a6');
+            scoreGradient.addColorStop(1, '#0d9488');
+            ctx.fillStyle = scoreGradient;
+            ctx.beginPath();
+            ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Score text
+            const percentage = Math.round((score / selectedQuestions.length) * 100);
+            ctx.fillStyle = 'white';
+            ctx.font = 'bold 36px Arial, sans-serif';
+            ctx.fillText(`${percentage}%`, centerX, centerY + 12);
+
+            // Stats
+            const timeUsedCanvas = 180 - timeLeft;
+            const canvasMinutes = Math.floor(timeUsedCanvas / 60);
+            const canvasSeconds = timeUsedCanvas % 60;
+            const canvasTime = `${canvasMinutes}:${canvasSeconds.toString().padStart(2, '0')}`;
+            
+            ctx.fillStyle = '#333';
+            ctx.font = '20px Arial, sans-serif';
+            const statsY = 450;
+            ctx.textAlign = 'left';
+            ctx.fillText(`✓ ${score} Correct`, centerX - 150, statsY);
+            ctx.fillText(`✗ ${selectedQuestions.length - score} Incorrect`, centerX + 50, statsY);
+            ctx.textAlign = 'center';
+            ctx.fillText(`⏱️ Time: ${canvasTime}`, centerX, statsY + 30);
+
+            // Download
+            const link = document.createElement('a');
+            link.download = `irys-quiz-result-${percentage}%.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        function restartQuiz() {
+            clearInterval(timerInterval);
+            clearTimeout(autoAdvanceTimeout);
+            timeLeft = 180;
+            document.getElementById('result-screen').style.display = 'none';
+            document.getElementById('start-screen').style.display = 'block';
+        }
+
+        // Initialize timer display and wallet connection on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            updateTimerDisplay();
+            checkWalletConnection();
+        });
+
+        // Learning Menu Functions
+        function showLearnMenu() {
+            document.getElementById('start-screen').style.display = 'none';
+            document.getElementById('learn-screen').style.display = 'block';
+            document.getElementById('topic-screen').style.display = 'none';
+        }
+
+        function showStartScreen() {
+            document.getElementById('start-screen').style.display = 'block';
+            document.getElementById('learn-screen').style.display = 'none';
+            document.getElementById('topic-screen').style.display = 'none';
+        }
+
+        function showTopic(topicId) {
+            document.getElementById('learn-screen').style.display = 'none';
+            document.getElementById('topic-screen').style.display = 'block';
+            
+            const topics = {
+                'what-is-irys': {
+                    icon: '🚀',
+                    title: 'What is Irys?',
+                    content: `
+                        <p>Irys represents a fundamental evolution in blockchain technology. Just as the early internet transformed from static web pages to a dynamic, programmable ecosystem, blockchain data storage is undergoing a similar transformation.</p>
+                        
+                        <div class="highlight-box">
+                            <p><strong>Irys is the world's first programmable datachain</strong> - a Layer-1 blockchain that combines low-cost storage, verifiable compute, and AI coordination in a single network.</p>
+                        </div>
+                        
+                        <h3>The Evolution from Static to Programmable</h3>
+                        <p>Traditional datachains operated as passive repositories - data was stored but remained static, isolated, and untouchable. Irys changes this paradigm by making data active, fluid, and valuable across applications.</p>
+                        
+                        <h3>Key Differentiators</h3>
+                        <ul>
+                            <li><strong>Native Integration:</strong> Storage and execution work together seamlessly</li>
+                            <li><strong>Programmable Data:</strong> Data carries instructions for smart contracts and AI agents</li>
+                            <li><strong>EVM Compatibility:</strong> Familiar development environment for Ethereum developers</li>
+                            <li><strong>Predictable Pricing:</strong> Costs anchored to hardware, not token speculation</li>
+                        </ul>
+                        
+                        <p>This evolution from passive to programmable data marks a true primitive in the blockchain space, enabling new categories of applications that were previously impossible.</p>
+                    `
+                },
+                'programmable-data': {
+                    icon: '⚡',
+                    title: 'Programmable Data',
+                    content: `
+                        <p>Programmable data is the core innovation that sets Irys apart from traditional storage solutions. Instead of data sitting idle after upload, it becomes an active participant in blockchain applications.</p>
+                        
+                        <h3>What Makes Data Programmable?</h3>
+                        <p>On Irys, data is stored with pre-defined instructions that smart contracts and AI agents can execute. This means data doesn't just exist - it carries logic, rules, and automated behaviors.</p>
+                        
+                        <div class="highlight-box">
+                            <p><strong>Example:</strong> A dataset can embed royalty rules, access permissions, and automated payments, allowing it to enforce its own licensing terms without manual intervention.</p>
+                        </div>
+                        
+                        <h3>Real-World Applications</h3>
+                        <ul>
+                            <li><strong>AI Coordination:</strong> Datasets that automatically coordinate multi-agent AI workflows</li>
+                            <li><strong>IP Licensing:</strong> Content that enforces its own licensing and payment terms</li>
+                            <li><strong>Dynamic NFTs:</strong> Digital assets that evolve based on onchain data and conditions</li>
+                            <li><strong>Automated Compliance:</strong> Data that ensures regulatory compliance through embedded rules</li>
+                        </ul>
+                        
+                        <h3>Benefits for Developers</h3>
+                        <p>Programmable data eliminates the complex bridging typically required between storage and execution layers, enabling developers to build applications where data and logic are truly integrated.</p>
+                    `
+                },
+                'verifiable-compute': {
+                    icon: '✅',
+                    title: 'Verifiable Compute',
+                    content: `
+                        <p>Verifiable compute ensures that AI computations and other processing tasks are completed correctly and can be independently verified through cryptographic proofs.</p>
+                        
+                        <h3>The Trust Problem</h3>
+                        <p>Traditional compute marketplaces suffer from a fundamental issue: how do you know if a GPU provider actually completed the work they claim? Verifiable compute solves this with mathematical certainty.</p>
+                        
+                        <div class="highlight-box">
+                            <p><strong>Layer-by-layer cryptographic proofs</strong> ensure that every step of a computation is provably correct, preventing incomplete or fraudulent work from being accepted.</p>
+                        </div>
+                        
+                        <h3>How It Works</h3>
+                        <ul>
+                            <li><strong>Proof Generation:</strong> Each computation step generates a cryptographic proof</li>
+                            <li><strong>Smart Contract Verification:</strong> Proofs are checked before payment is released</li>
+                            <li><strong>Independent Auditing:</strong> AI agents can verify work without trusting providers</li>
+                            <li><strong>Epoch Matching:</strong> Ensures computations match expected parameters</li>
+                        </ul>
+                        
+                        <h3>Benefits</h3>
+                        <ul>
+                            <li><strong>For AI Developers:</strong> Guaranteed quality and transparency in compute jobs</li>
+                            <li><strong>For GPU Providers:</strong> Fair payment for completed work with clear standards</li>
+                            <li><strong>For AI Agents:</strong> Ability to coordinate complex workflows with verified outputs</li>
+                            <li><strong>For Users:</strong> Auditability and trust in AI-generated results</li>
+                        </ul>
+                    `
+                },
+                'storage-pricing': {
+                    icon: '💰',
+                    title: 'Storage & Pricing',
+                    content: `
+                        <p>Irys revolutionizes blockchain storage pricing by anchoring costs to actual hardware expenses rather than volatile token prices, making it predictable and affordable for developers.</p>
+                        
+                        <h3>The Pricing Problem</h3>
+                        <p>Traditional blockchain storage suffers from unpredictable costs tied to token speculation. A project budgeted for $1000 in storage might suddenly cost $5000 due to token price fluctuations.</p>
+                        
+                        <div class="highlight-box">
+                            <p><strong>Hardware-Anchored Pricing:</strong> Irys ties storage costs directly to HDD hardware costs, ensuring predictable and stable pricing regardless of token volatility.</p>
+                        </div>
+                        
+                        <h3>Cost Comparison</h3>
+                        <ul>
+                            <li><strong>Arweave:</strong> ~$8-10 per GB (token-volatile pricing)</li>
+                            <li><strong>Irys:</strong> ~$0.40-0.50 per GB (hardware-anchored)</li>
+                            <li><strong>Savings:</strong> Approximately 20× cheaper than alternatives</li>
+                        </ul>
+                        
+                        <h3>Storage Models</h3>
+                        <ul>
+                            <li><strong>Permanent Storage:</strong> Data stored indefinitely with one-time payment</li>
+                            <li><strong>Term-Based Storage:</strong> Flexible duration options for temporary data needs</li>
+                            <li><strong>Hybrid Approach:</strong> Mix permanent and term storage based on use case</li>
+                        </ul>
+                        
+                        <h3>Multi-Ledger Architecture</h3>
+                        <p>Irys uses a partition-based multi-ledger design that prevents bottlenecks and enables massive scale for AI datasets and enterprise applications.</p>
+                    `
+                },
+                'irysvm': {
+                    icon: '⚙️',
+                    title: 'IrysVM',
+                    content: `
+                        <p>IrysVM is Irys's execution layer - a modified Ethereum Virtual Machine specifically designed for data-heavy applications that need to interact directly with stored data.</p>
+                        
+                        <h3>EVM Compatibility</h3>
+                        <p>IrysVM maintains full compatibility with Ethereum's virtual machine, meaning developers can use familiar tools, languages, and frameworks they already know.</p>
+                        
+                        <div class="highlight-box">
+                            <p><strong>Key Enhancement:</strong> Unlike standard EVM, IrysVM can directly read from and write to the storage layer, eliminating complex bridging between execution and data.</p>
+                        </div>
+                        
+                        <h3>What This Enables</h3>
+                        <ul>
+                            <li><strong>Direct Data Access:</strong> Smart contracts can natively read stored datasets</li>
+                            <li><strong>Data Manipulation:</strong> Contracts can validate, reference, and evolve stored data</li>
+                            <li><strong>Native Write-Back:</strong> Results can be written directly to storage within the same transaction</li>
+                            <li><strong>Integrated Workflows:</strong> Complex data operations in single protocol calls</li>
+                        </ul>
+                        
+                        <h3>Developer Benefits</h3>
+                        <ul>
+                            <li><strong>Familiar Environment:</strong> Use Solidity, Web3.js, Hardhat, and other Ethereum tools</li>
+                            <li><strong>Enhanced Capabilities:</strong> Access to data operations not possible on standard EVM</li>
+                            <li><strong>Simplified Architecture:</strong> No need for complex off-chain data bridges</li>
+                            <li><strong>AI-Native Features:</strong> Built-in support for AI agent coordination</li>
+                        </ul>
+                        
+                        <h3>Use Cases</h3>
+                        <p>Perfect for AI startups, data-intensive dApps, and applications requiring seamless integration between computation and large-scale data storage.</p>
+                    `
+                },
+                'use-cases': {
+                    icon: '🔧',
+                    title: 'Use Cases & Applications',
+                    content: `
+                        <p>Irys enables entirely new categories of applications by combining programmable data, verifiable compute, and integrated storage in ways previously impossible.</p>
+                        
+                        <h3>AI & Machine Learning</h3>
+                        <ul>
+                            <li><strong>AI Agent Coordination:</strong> Multi-agent workflows with verifiable computation steps</li>
+                            <li><strong>Dataset Licensing:</strong> Automated royalty payments for AI training data</li>
+                            <li><strong>Model Versioning:</strong> Immutable tracking of AI model evolution and performance</li>
+                            <li><strong>Compute Verification:</strong> Proof that AI computations were completed correctly</li>
+                        </ul>
+                        
+                        <div class="highlight-box">
+                            <p><strong>Example:</strong> An AI training dataset that automatically enforces licensing terms, collects royalties, and provides usage analytics to data creators.</p>
+                        </div>
+                        
+                        <h3>Intellectual Property & Content</h3>
+                        <ul>
+                            <li><strong>Dynamic NFTs:</strong> Assets that evolve based on real-world data</li>
+                            <li><strong>Content Rights Management:</strong> Automated licensing and royalty distribution</li>
+                            <li><strong>Provenance Tracking:</strong> Immutable history of content creation and ownership</li>
+                            <li><strong>Fair Use Enforcement:</strong> Smart contracts that enforce usage rights</li>
+                        </ul>
+                        
+                        <h3>Enterprise Applications</h3>
+                        <ul>
+                            <li><strong>Supply Chain Transparency:</strong> Verifiable product tracking with embedded compliance</li>
+                            <li><strong>Data Governance:</strong> Automated compliance and audit trails</li>
+                            <li><strong>Digital Twins:</strong> Real-time synchronized digital representations</li>
+                            <li><strong>Regulatory Reporting:</strong> Automated compliance with embedded rules</li>
+                        </ul>
+                        
+                        <h3>Gaming & Virtual Worlds</h3>
+                        <ul>
+                            <li><strong>Player-Owned Assets:</strong> True digital ownership with programmable behaviors</li>
+                            <li><strong>Cross-Game Interoperability:</strong> Assets that work across multiple games</li>
+                            <li><strong>Dynamic Economies:</strong> In-game economies with real-world value</li>
+                        </ul>
+                        
+                        <p>These use cases represent just the beginning - programmable data opens possibilities we're only starting to explore.</p>
+                    `
+                }
+            };
+            
+            const topic = topics[topicId];
+            if (topic) {
+                document.getElementById('topic-detail').innerHTML = `
+                    <h2><span style="font-size: 2.5rem; margin-right: 15px;">${topic.icon}</span>${topic.title}</h2>
+                    ${topic.content}
+                    <div style="margin-top: 40px; padding: 20px; background: rgba(99, 102, 241, 0.1); border-radius: 12px; text-align: center;">
+                        <p style="margin-bottom: 15px; font-weight: 600; color: #4f46e5;">Ready to test your knowledge?</p>
+                        <button class="button" onclick="returnToQuiz()" style="background: linear-gradient(135deg, #14b8a6, #0d9488);">Take the Quiz</button>
+                    </div>
+                `;
+            }
+        }
+
+        function returnToQuiz() {
+            showStartScreen();
+        }
+
+        // Wallet Connect Functions
+        let web3Provider = null;
+        let userAccount = null;
+        let isConnected = false;
+
+        // Irys Testnet Configuration
+        const IRYS_TESTNET_CONFIG = {
+            chainId: '0x4F6', // 1270 in hex
+            chainName: 'Irys Testnet',
+            nativeCurrency: {
+                name: 'IRYS',
+                symbol: 'IRYS',
+                decimals: 18
+            },
+            rpcUrls: ['https://testnet-rpc.irys.xyz/v1/execution-rpc'],
+            blockExplorerUrls: ['https://testnet-explorer.irys.xyz/']
+        };
+
+        async function connectWallet() {
+            if (typeof window.ethereum === 'undefined') {
+                alert('Please install MetaMask or another Web3 wallet to connect!');
+                return;
+            }
+
+            try {
+                // Request account access
+                const accounts = await window.ethereum.request({
+                    method: 'eth_requestAccounts'
+                });
+
+                if (accounts.length === 0) {
+                    throw new Error('No accounts found');
+                }
+
+                userAccount = accounts[0];
+
+                // Check if we're on the correct network
+                const chainId = await window.ethereum.request({
+                    method: 'eth_chainId'
+                });
+
+                if (chainId !== IRYS_TESTNET_CONFIG.chainId) {
+                    await switchToIrysNetwork();
+                }
+
+                // Initialize provider
+                web3Provider = window.ethereum;
+                isConnected = true;
+
+                // Update UI
+                updateWalletUI();
+                showNetworkStatus('Connected to Irys Testnet', false);
+
+                // Listen for account changes
+                window.ethereum.on('accountsChanged', handleAccountsChanged);
+                window.ethereum.on('chainChanged', handleChainChanged);
+
+                console.log('Connected to Irys Testnet:', userAccount);
+
+            } catch (error) {
+                console.error('Failed to connect wallet:', error);
+                showNetworkStatus('Failed to connect wallet: ' + error.message, true);
+            }
+        }
+
+        async function switchToIrysNetwork() {
+            try {
+                // Try to switch to Irys network
+                await window.ethereum.request({
+                    method: 'wallet_switchEthereumChain',
+                    params: [{ chainId: IRYS_TESTNET_CONFIG.chainId }]
+                });
+            } catch (switchError) {
+                // If the network doesn't exist, add it
+                if (switchError.code === 4902) {
+                    try {
+                        await window.ethereum.request({
+                            method: 'wallet_addEthereumChain',
+                            params: [IRYS_TESTNET_CONFIG]
+                        });
+                    } catch (addError) {
+                        throw new Error('Failed to add Irys network to wallet');
+                    }
+                } else {
+                    throw switchError;
+                }
+            }
+        }
+
+        async function getBalance() {
+            if (!web3Provider || !userAccount) return '0.00';
+
+            try {
+                const balance = await web3Provider.request({
+                    method: 'eth_getBalance',
+                    params: [userAccount, 'latest']
+                });
+
+                // Convert from wei to IRYS
+                const balanceInIrys = parseInt(balance, 16) / Math.pow(10, 18);
+                return balanceInIrys.toFixed(4);
+            } catch (error) {
+                console.error('Failed to get balance:', error);
+                return '0.00';
+            }
+        }
+
+        async function updateWalletUI() {
+            if (isConnected && userAccount) {
+                const balance = await getBalance();
+                const shortAddress = `${userAccount.slice(0, 6)}...${userAccount.slice(-4)}`;
+
+                document.getElementById('wallet-address').textContent = shortAddress;
+                document.getElementById('wallet-balance').textContent = `${balance} IRYS`;
+                document.getElementById('wallet-connect').style.display = 'none';
+                document.getElementById('wallet-disconnect').style.display = 'flex';
+            } else {
+                document.getElementById('wallet-connect').style.display = 'block';
+                document.getElementById('wallet-disconnect').style.display = 'none';
+            }
+        }
+
+        function disconnectWallet() {
+            // Clean up
+            if (window.ethereum) {
+                window.ethereum.removeListener('accountsChanged', handleAccountsChanged);
+                window.ethereum.removeListener('chainChanged', handleChainChanged);
+            }
+
+            web3Provider = null;
+            userAccount = null;
+            isConnected = false;
+
+            // Update UI
+            updateWalletUI();
+            showNetworkStatus('Wallet disconnected', false);
+        }
+
+        function handleAccountsChanged(accounts) {
+            if (accounts.length === 0) {
+                disconnectWallet();
+            } else {
+                userAccount = accounts[0];
+                updateWalletUI();
+            }
+        }
+
+        function handleChainChanged(chainId) {
+            if (chainId !== IRYS_TESTNET_CONFIG.chainId) {
+                showNetworkStatus('Please switch to Irys Testnet', true);
+                isConnected = false;
+            } else {
+                showNetworkStatus('Connected to Irys Testnet', false);
+                isConnected = true;
+            }
+            updateWalletUI();
+        }
+
+        function showNetworkStatus(message, isError) {
+            // Remove existing status if any
+            const existingStatus = document.querySelector('.network-status');
+            if (existingStatus) {
+                existingStatus.remove();
+            }
+
+            // Create new status element
+            const statusDiv = document.createElement('div');
+            statusDiv.className = `network-status ${isError ? 'error' : ''}`;
+            statusDiv.textContent = message;
+
+            // Insert after wallet section
+            const walletSection = document.querySelector('.wallet-section');
+            walletSection.insertAdjacentElement('afterend', statusDiv);
+
+            // Auto-remove after 5 seconds for non-error messages
+            if (!isError) {
+                setTimeout(() => {
+                    if (statusDiv.parentNode) {
+                        statusDiv.remove();
+                    }
+                }, 5000);
+            }
+        }
+
+        // Check if wallet was previously connected
+        async function checkWalletConnection() {
+            if (typeof window.ethereum !== 'undefined') {
+                try {
+                    const accounts = await window.ethereum.request({
+                        method: 'eth_accounts'
+                    });
+
+                    if (accounts.length > 0) {
+                        userAccount = accounts[0];
+                        web3Provider = window.ethereum;
+
+                        const chainId = await window.ethereum.request({
+                            method: 'eth_chainId'
+                        });
+
+                        if (chainId === IRYS_TESTNET_CONFIG.chainId) {
+                            isConnected = true;
+                            updateWalletUI();
+                            
+                            // Listen for changes
+                            window.ethereum.on('accountsChanged', handleAccountsChanged);
+                            window.ethereum.on('chainChanged', handleChainChanged);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Failed to check wallet connection:', error);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
